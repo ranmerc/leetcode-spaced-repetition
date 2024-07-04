@@ -1,71 +1,73 @@
-import { Database } from "bun:sqlite";
-import {
-  ProblemList,
-  type ProblemListType,
-  type ProblemType,
-} from "./types/problem";
+import type { ProblemsDB } from "./db/db";
+import { LocalDB } from "./db/local";
+import { TursoDB } from "./db/turso";
+import { handleAddProblem } from "./addProblem";
+import { Environment, LocalConfig, TursoConfig } from "./types/config";
+import { handleReviewProblem } from "./reviewProblem";
+import { readUserInput } from "./utils/input";
 
-const db = new Database("db.sqlite");
-
-const query = db.query(`SELECT * FROM 'problems'`);
-
-const result = query.all();
-
-const { data: problemsList, error } = ProblemList.safeParse(result);
+const { data: environmentType, error } = Environment.safeParse(
+  process.env.TYPE
+);
 
 if (error) {
-  console.error(error);
+  console.error(
+    "Failed to load environment type. Please check the environment variable TYPE. Valid values are 'local' or 'hosted'."
+  );
   process.exit(1);
 }
 
-function calculateNextReviewDate(problem: ProblemType) {
-  const baseIntervals: Record<number, number> = {
-    1: 1,
-    2: 2,
-    3: 4,
-    4: 7,
-    5: 10,
-    6: 14,
-    7: 21,
-    8: 30,
-    9: 45,
-    10: 60,
-  };
+let db: ProblemsDB;
 
-  const baseInterval = baseIntervals[problem.confidence];
-  const intervalFactor = Math.pow(2, problem.times - 1);
-  const nextInterval = baseInterval * intervalFactor;
+if (environmentType === "hosted") {
+  const { data: config, error } = TursoConfig.safeParse({
+    url: process.env.TURSO_DATABASE_URL,
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  });
 
-  const lastSolvedDate = new Date(problem.date);
-  const nextReviewDate = new Date(lastSolvedDate);
-  nextReviewDate.setDate(lastSolvedDate.getDate() + nextInterval);
+  if (error) {
+    console.error(
+      "Failed to load Turso configuration. Please check the environment variables TURSO_DATABASE_URL and TURSO_AUTH_TOKEN."
+    );
+    process.exit(1);
+  }
 
-  return nextReviewDate;
+  db = new TursoDB(config);
+} else {
+  const { data: config, error } = LocalConfig.safeParse({
+    filePath: process.env.LOCAL_DATABASE_PATH,
+  });
+
+  db = new LocalDB(config?.filePath);
 }
 
-function getNextProblemToSolve(problemsList: ProblemListType) {
-  const problemsWithNextReviewDates = problemsList.map((problem) => ({
-    ...problem,
-    nextReviewDate: calculateNextReviewDate(problem),
-  }));
+process.stdout.write("Welcome to Leetcode Spaced Repetition System\n");
 
-  problemsWithNextReviewDates.sort(
-    (a, b) => a.nextReviewDate.getTime() - b.nextReviewDate.getTime()
-  );
+while (true) {
+  process.stdout.write("\nChoose an option:\n");
+  process.stdout.write("1. Add a problem\n");
+  process.stdout.write("2. Review problems\n");
+  process.stdout.write("3. Exit\n");
 
-  const now = new Date();
-  const nextProblem = problemsWithNextReviewDates.find(
-    (problem) => problem.nextReviewDate <= now
-  );
+  const userInput = await readUserInput("> ");
 
-  if (nextProblem) {
-    return nextProblem;
-  } else {
-    return "All problems are up-to-date. No problems to revise.";
+  switch (userInput) {
+    case "1": {
+      await handleAddProblem(db);
+      break;
+    }
+    case "2": {
+      await handleReviewProblem(db);
+      break;
+    }
+    case "3": {
+      process.stdout.write("Goodbye!\n");
+      process.exit(0);
+    }
+
+    default: {
+      process.stdout.write("Invalid option. Please choose again.\n");
+      break;
+    }
   }
 }
-
-const nextProblem = getNextProblemToSolve(problemsList);
-console.log("Next problem to solve:", nextProblem);
-
-db.close();
