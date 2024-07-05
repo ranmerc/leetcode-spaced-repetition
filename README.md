@@ -26,7 +26,7 @@ bun i
 
 - Copy over `.env.example` at root to `.env` and fill in the values.
 - Set `TYPE` to `local` if you wish to local sqlite db instance.
-- If `local` set `DB_PATH` to the file path name where you'd like to store the local sqlite3 db file.
+- If `local` set `LOCAL_DATABASE_PATH` to the file path name where you'd like to store the local sqlite3 db file.
 - Set `TYPE` to `hosted` if you wish to use hosted turso db instance.
 - Create a db on turso and execute the table sql present in [migrations](./migrations/create_practice_table.sql).
 - Generate and fill in the `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` referring [turso auth docs](https://docs.turso.tech/cli/auth/token).
@@ -37,4 +37,4 @@ bun i
 bun index.ts
 ```
 
-And follow the accordingly.
+And follow the prompts accordingly.

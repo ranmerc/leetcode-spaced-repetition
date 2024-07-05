@@ -34,7 +34,7 @@ if (environmentType === "hosted") {
 
   db = new TursoDB(config);
 } else {
-  const { data: config, error } = LocalConfig.safeParse({
+  const { data: config } = LocalConfig.safeParse({
     filePath: process.env.LOCAL_DATABASE_PATH,
   });
 
