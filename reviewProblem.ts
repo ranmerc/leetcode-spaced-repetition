@@ -4,17 +4,45 @@ import type { ProblemListType, ProblemType } from "./types/problem";
 export const handleReviewProblem = async (db: ProblemsDB) => {
   try {
     const problemsList = await db.getProblems();
-    const nextProblem = getNextProblemToSolve(problemsList);
+    const { problemsToReview, upcomingProblems } =
+      getReviewProblems(problemsList);
 
-    if (nextProblem) {
-      console.log(
-        `Next problem to solve: ${nextProblem.name} - ${nextProblem.url}`
-      );
+    if (problemsToReview.length > 0) {
+      console.log("\nProblems to review:");
+      problemsToReview.forEach((problem) => {
+        console.log(
+          `${problem.name} - ${
+            problem.url
+          } - ${problem.nextReviewDate.toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })}`
+        );
+      });
     } else {
-      console.log("No problems to review at the moment.");
+      console.log("\nNo problems to review at the moment.");
+    }
+
+    if (upcomingProblems.length > 0) {
+      console.log("\nUpcoming problems to review:");
+      // Show the next 3 upcoming problems
+      upcomingProblems.slice(0, 3).forEach((problem) => {
+        console.log(
+          `${problem.name} - ${
+            problem.url
+          } - ${problem.nextReviewDate.toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })}`
+        );
+      });
+    } else {
+      console.log("\nNo upcoming problems to review.");
     }
   } catch (e) {
-    console.error("Failed to review problems. Please try again.");
+    console.error("\nFailed to review problems. Please try again.");
   }
 };
 
@@ -43,7 +71,7 @@ function calculateNextReviewDate(problem: ProblemType) {
   return nextReviewDate;
 }
 
-function getNextProblemToSolve(problemsList: ProblemListType) {
+function getReviewProblems(problemsList: ProblemListType) {
   const problemsWithNextReviewDates = problemsList.map((problem) => ({
     ...problem,
     nextReviewDate: calculateNextReviewDate(problem),
@@ -53,12 +81,15 @@ function getNextProblemToSolve(problemsList: ProblemListType) {
     (a, b) => a.nextReviewDate.getTime() - b.nextReviewDate.getTime()
   );
 
-  const now = new Date();
-  const nextProblem = problemsWithNextReviewDates.find(
-    (problem) => problem.nextReviewDate <= now
+  const problemsToReview = problemsWithNextReviewDates.filter(
+    (problem) => problem.nextReviewDate <= new Date()
+  );
+  const upcomingProblems = problemsWithNextReviewDates.filter(
+    (problem) => problem.nextReviewDate > new Date()
   );
 
-  if (nextProblem) {
-    return nextProblem;
-  }
+  return {
+    problemsToReview,
+    upcomingProblems,
+  };
 }
