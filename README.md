@@ -31,10 +31,16 @@ bun i
 - Create a db on turso and execute the table sql present in [migrations](./migrations/create_practice_table.sql).
 - Generate and fill in the `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` referring [turso auth docs](https://docs.turso.tech/cli/auth/token).
 
-4. Run the app
+4. Build the app
 
 ```console
-bun index.ts
+bun run build
 ```
 
-And follow the prompts accordingly.
+5. Run the app
+
+```console
+bun run start
+```
+
+You can also add built binary `leetcode-spaced` to your path and run it from anywhere.

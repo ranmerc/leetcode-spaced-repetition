@@ -2,10 +2,13 @@
   "name": "leetcode-spaced",
   "module": "index.ts",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "typescript": "^5.8.3"
   },
-  "peerDependencies": {
-    "typescript": "^5.5.3"
+  "scripts": {
+    "dev": "bun index.ts",
+    "build": "tsc --pretty --noEmit && bun build ./index.ts --compile --outfile leetcode-spaced",
+    "start": "./leetcode-spaced"
   },
   "type": "module",
   "dependencies": {
