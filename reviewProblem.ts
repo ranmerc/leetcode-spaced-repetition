@@ -46,27 +46,22 @@ export const handleReviewProblem = async (db: ProblemsDB) => {
   }
 };
 
+// WARNING: This function is written by LLM. Replace if not working as intended.
 function calculateNextReviewDate(problem: ProblemType) {
-  const baseIntervals: Record<number, number> = {
-    1: 1,
-    2: 2,
-    3: 4,
-    4: 7,
-    5: 10,
-    6: 14,
-    7: 21,
-    8: 30,
-    9: 45,
-    10: 60,
-  };
+  const lastDate = new Date(problem.date);
 
-  const baseInterval = baseIntervals[problem.confidence];
-  const intervalFactor = Math.pow(2, problem.times - 1);
-  const nextInterval = baseInterval * intervalFactor;
+  // 1–10 confidence → lower confidence = sooner review
+  const base = Math.max(1, Math.round(problem.confidence / 2)); // 1–5 days
+  const growth = 1.7; // moderate curve
 
-  const lastSolvedDate = new Date(problem.date);
-  const nextReviewDate = new Date(lastSolvedDate);
-  nextReviewDate.setDate(lastSolvedDate.getDate() + nextInterval);
+  // Smooth interval growth, capped at 30 days
+  const interval = Math.min(
+    30,
+    Math.round(base * Math.pow(growth, problem.times - 1))
+  );
+
+  const nextReviewDate = new Date(lastDate);
+  nextReviewDate.setDate(nextReviewDate.getDate() + interval);
 
   return nextReviewDate;
 }
