@@ -8,8 +8,8 @@ export const handleAddProblem = async (db: ProblemsDB) => {
   // eg. https://leetcode.com/problems/set-matrix-zeroes/description/ ->
   // https://leetcode.com/problems/set-matrix-zeroes
   const url = inputURL.replace(
-    /(https\:\/\/leetcode.com\/problems\/.*)\/.+/,
-    "$1"
+    /(https\:\/\/leetcode.com\/problems\/[^\/]*).*/,
+    "$1",
   );
 
   // eg. set-matrix-zeroes -> SET MATRIX ZEROES
