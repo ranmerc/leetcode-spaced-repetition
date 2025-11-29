@@ -5,14 +5,15 @@ import { handleAddProblem } from "./addProblem";
 import { Environment, LocalConfig, TursoConfig } from "./types/config";
 import { handleReviewProblem } from "./reviewProblem";
 import { readUserInput } from "./utils/input";
+import { handleShowProblems } from "./showProblems";
 
 const { data: environmentType, error } = Environment.safeParse(
-  process.env.TYPE
+  process.env.TYPE,
 );
 
 if (error) {
   console.error(
-    "Failed to load environment type. Please check the environment variable TYPE. Valid values are 'local' or 'hosted'."
+    "Failed to load environment type. Please check the environment variable TYPE. Valid values are 'local' or 'hosted'.",
   );
   process.exit(1);
 }
@@ -27,7 +28,7 @@ if (environmentType === "hosted") {
 
   if (error) {
     console.error(
-      "Failed to load Turso configuration. Please check the environment variables TURSO_DATABASE_URL and TURSO_AUTH_TOKEN."
+      "Failed to load Turso configuration. Please check the environment variables TURSO_DATABASE_URL and TURSO_AUTH_TOKEN.",
     );
     process.exit(1);
   }
@@ -47,7 +48,8 @@ while (true) {
   process.stdout.write("\nChoose an option:\n");
   process.stdout.write("1. Add a problem\n");
   process.stdout.write("2. Review problems\n");
-  process.stdout.write("3. Exit\n");
+  process.stdout.write("3. Show Solved Problems\n");
+  process.stdout.write("4. Exit\n");
 
   const userInput = await readUserInput("> ");
 
@@ -61,6 +63,10 @@ while (true) {
       break;
     }
     case "3": {
+      await handleShowProblems(db);
+      break;
+    }
+    case "4": {
       process.stdout.write("Goodbye!\n");
       process.exit(0);
     }
